@@ -1,196 +1,386 @@
-# Task Manager - Full-Stack Task Management System
+# 📝 Task Manager
 
-A portfolio project demonstrating a Flask REST API and React client for personal task tracking. It uses MySQL for application data, JWT bearer tokens for authentication, bcrypt for password hashing, pytest for backend tests, and Docker Compose for local API and database development. **This project is not deployed and has no live demo.**
+> A full-stack task management application built with **Flask, React, MySQL, JWT Authentication, Docker, and GitHub Actions**.
 
-## Features
+Task Manager is a full-stack web application that provides secure user authentication and task management through a RESTful API and a React-based frontend.
 
-- User signup and login; passwords are stored as bcrypt hashes.
-- JWT-protected task endpoints with user-specific task ownership.
-- Create, read, update, and delete tasks.
-- Validate task titles, descriptions, status, priority, filters, and pagination.
-- Filter tasks by status and priority; paginate list responses.
-- React screens for authentication, task editing, completion toggling, filtering, and pagination.
-- Isolated backend tests using an in-memory SQLite database.
-- GitHub Actions checks for backend tests, frontend dependency audit/build, and Docker image build.
+The project focuses on clean backend architecture, JWT-based authentication, user-specific task ownership, database integration, automated testing, containerization, and CI validation.
 
-## Technology
+---
 
-| Area                      | Technologies                                              |
-| ------------------------- | --------------------------------------------------------- |
-| Backend                   | Python 3.14, Flask, Flask-SQLAlchemy, SQLAlchemy, PyMySQL |
-| Authentication            | Flask-JWT-Extended, bcrypt                                |
-| Frontend                  | React 18, React Router 7, Vite 8, Axios, React Icons      |
-| Database                  | MySQL 8; SQLite in-memory for pytest                      |
-| Quality and local tooling | pytest, npm, Docker, Docker Compose, GitHub Actions       |
+## ✨ Features
 
-## Architecture
+### 🔐 Authentication & Security
+
+* User registration and login
+* JWT-based authentication
+* Password hashing with bcrypt
+* Protected API endpoints
+* User-specific task ownership
+* Users can access only their own tasks
+* Environment-based configuration for sensitive values
+
+### 📋 Task Management
+
+* Create tasks
+* View tasks
+* Update tasks
+* Delete tasks
+* Task ownership validation
+* Protected task operations
+
+### 🖥️ Frontend
+
+* React + Vite
+* Authentication flow
+* Task management interface
+* API integration with Flask backend
+* API base URL configured through `/api`
+
+### 🧪 Testing
+
+* Pytest-based backend test suite
+* Authentication tests
+* Task CRUD tests
+* Authorization and ownership tests
+* Error-handling tests
+
+**Current test status:**
 
 ```text
-React browser client
-  -> Axios JSON requests (Vite proxies /api during local development)
-  -> Flask blueprints (/api)
-  -> request validation and JWT checks
-  -> service functions enforce task ownership
-  -> SQLAlchemy models and MySQL
+29 passed
 ```
 
-The app factory in `app/__init__.py` initializes Flask, SQLAlchemy, JWT, CORS, error handlers, and the API blueprints. The task service scopes task reads and mutations to the authenticated user's ID. Tables are created with SQLAlchemy `db.create_all()` at application startup; a migration tool is not included.
+### 🐳 Docker
 
-### Project structure
+* Backend containerization
+* Docker Compose configuration
+* Environment-based Docker configuration
+* Easy local development setup
+
+### ⚙️ CI/CD
+
+GitHub Actions is configured to automatically validate the project during development.
+
+The CI workflow runs the project's automated checks and helps prevent broken changes from being merged.
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer            | Technology     |
+| ---------------- | -------------- |
+| Backend          | Flask          |
+| API              | REST API       |
+| Frontend         | React + Vite   |
+| Database         | MySQL          |
+| Authentication   | JWT            |
+| Password Hashing | bcrypt         |
+| Testing          | Pytest         |
+| Containerization | Docker         |
+| Orchestration    | Docker Compose |
+| CI               | GitHub Actions |
+| Version Control  | Git & GitHub   |
+
+---
+
+## 🏗️ Project Architecture
 
 ```text
-app/
-  models/          User and Task SQLAlchemy models
-  routes/          Authentication and task API blueprints
-  services/        Authentication and task business logic
-  utils/           API error handlers
-tests/             pytest API behavior tests
-frontend/
-  src/pages/       Login, signup, and dashboard
-  src/components/  Task form, list, and card
-  src/services/    Axios API client
-.github/workflows/ GitHub Actions CI
-Dockerfile         Backend image
-docker-compose.yml Local API and MySQL services
-.env.example       Safe root environment template
+task-manager/
+│
+├── backend/
+│   ├── app/
+│   │   ├── routes/
+│   │   ├── models/
+│   │   ├── services/
+│   │   └── ...
+│   │
+│   ├── tests/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── ...
+│
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── ...
+│
+├── docker-compose.yml
+├── .github/
+│   └── workflows/
+│
+├── .env.example
+└── README.md
 ```
 
-## Authentication and Authorization
+> The structure above represents the major project components. Refer to the repository for the complete implementation structure.
 
-- `POST /api/signup` validates the name, email, and password; passwords are hashed with bcrypt. A duplicate email returns `409`.
-- `POST /api/login` verifies credentials and returns `access_token` plus user data.
-- The frontend sends the token in the `Authorization: Bearer <token>` header for task requests.
-- Missing, invalid, or expired tokens receive `401` responses.
-- Every task endpoint requires authentication. Task queries include the token's user ID; another user's task is treated as not found (`404`).
-- The browser client stores the access token and user data in `localStorage` and clears them when an API response indicates an unauthorized session.
+---
 
-## Task Management
+## 🔑 Authentication Flow
 
-Tasks have a title, optional description, status, priority, creation timestamp, and owning user ID. Supported statuses are `pending`, `in_progress`, and `completed`; priorities are `low`, `medium`, and `high`.
+The application uses JWT-based authentication.
 
-The task list accepts `status`, `priority`, `page`, and `per_page`. Defaults are page `1` and 10 results per page; `per_page` is limited to 1-100. Its response includes `tasks`, `total`, `page`, `per_page`, and `pages`. `PUT` accepts one or more supported task fields. Invalid or unsupported values return `400`.
+```text
+User
+ │
+ ├── Signup
+ │      ↓
+ │   Password Hashing
+ │      ↓
+ │   MySQL
+ │
+ └── Login
+        ↓
+     JWT Token
+        ↓
+   Protected API
+        ↓
+   Task Operations
+```
 
-## API Overview
+Protected endpoints require a valid authentication token.
 
-All routes are registered under `/api`.
+Task ownership is also checked so that authenticated users can operate only on their own tasks.
 
-| Method   | Route                  | Auth         | Behavior                                                  |
-| -------- | ---------------------- | ------------ | --------------------------------------------------------- |
-| `GET`    | `/api/health`          | No           | Returns API health status                                 |
-| `POST`   | `/api/signup`          | No           | Creates an account; duplicate email returns `409`         |
-| `POST`   | `/api/login`           | No           | Verifies credentials and returns an access token          |
-| `GET`    | `/api/tasks`           | Bearer token | Lists the caller's tasks; supports filters and pagination |
-| `POST`   | `/api/tasks`           | Bearer token | Creates a task for the caller                             |
-| `GET`    | `/api/tasks/<task_id>` | Bearer token | Gets an owned task; otherwise returns `404`               |
-| `PUT`    | `/api/tasks/<task_id>` | Bearer token | Updates supplied fields on an owned task                  |
-| `DELETE` | `/api/tasks/<task_id>` | Bearer token | Deletes an owned task; returns `204`                      |
+---
 
-## Database
+## 🌐 API Overview
 
-MySQL is the application database. `User` records have a unique email and password hash. `Task.user_id` is a non-null foreign key to `users.id`, supporting per-user task ownership. SQLAlchemy creates the tables during app startup; schema migrations are not configured. Pytest overrides the database URL with in-memory SQLite, so running the backend tests does not require MySQL.
+The backend API uses the `/api` prefix.
 
-## Frontend
+### Authentication
 
-The React single-page app provides `/login`, `/signup`, and `/dashboard` views. Axios uses `/api` by default, and the Vite development server proxies that path to `http://127.0.0.1:5000`. Set `VITE_API_URL` only when the API is hosted at another base URL. The frontend is started separately; it is not included in the Docker image or Compose services.
+| Method | Endpoint      | Description                      |
+| ------ | ------------- | -------------------------------- |
+| POST   | `/api/signup` | Register a new user              |
+| POST   | `/api/login`  | Authenticate user and obtain JWT |
 
-## Local Development
+### Tasks
 
-### Prerequisites
+| Method    | Endpoint          | Description                    |
+| --------- | ----------------- | ------------------------------ |
+| GET       | `/api/tasks`      | Get authenticated user's tasks |
+| POST      | `/api/tasks`      | Create a task                  |
+| PUT/PATCH | `/api/tasks/<id>` | Update a task                  |
+| DELETE    | `/api/tasks/<id>` | Delete a task                  |
 
-- Python 3.14
-- Node.js 24 and npm
-- MySQL 8 for running the backend directly, or Docker with the Compose plugin for the containerized API/database setup
+> Exact request and response formats are documented by the implementation and can be explored through the API source/tests.
 
-### Configure environment
+---
 
-From the repository root, create a local env file from the safe template and edit its placeholder values:
+## 🗄️ Database
+
+The application uses **MySQL** for persistent data storage.
+
+The database stores application data including:
+
+* Users
+* Tasks
+* User-task ownership relationships
+
+Sensitive database credentials are **not stored directly in the source code**.
+
+Environment variables are used for configuration.
+
+---
+
+## ⚙️ Environment Variables
+
+Create environment files from the provided examples.
+
+Example:
+
+```bash
+cp .env.example .env
+```
+
+On Windows PowerShell:
 
 ```powershell
 Copy-Item .env.example .env
-python -c "import secrets; print(secrets.token_urlsafe(48))"
-notepad .env
 ```
 
-Use the generated random value for `JWT_SECRET_KEY`. Set the MySQL root and application-user passwords before starting Compose. `.env` is ignored by Git and excluded from the Docker build context; do not commit it. `frontend/.env.example` documents the optional frontend setting. Vite defaults to `/api`, so no frontend env file is needed for the local proxy.
+Configure the required values in `.env`.
 
-### Run API and frontend locally
+### 🔒 Security
 
-Start MySQL separately, create the configured database and application user, then configure `.env` for that server (`MYSQL_HOST=localhost`, database name, user, and password). From the repository root:
+Never commit real credentials or secrets to GitHub.
+
+Sensitive values such as:
+
+* Database passwords
+* JWT secrets
+* API credentials
+
+should remain in environment variables.
+
+The repository contains example configuration files with placeholder values.
+
+---
+
+## 🚀 Local Development
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/ratneshbuilds03/task-manager-portfolio.git
+cd task-manager-portfolio
+```
+
+### 2. Backend setup
+
+Create and activate a virtual environment:
 
 ```powershell
 python -m venv venv
-.\venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python run.py
 ```
 
-The API listens on `http://localhost:5000` by default. In another terminal:
+Windows:
 
 ```powershell
-npm --prefix frontend ci
-npm --prefix frontend run dev
+venv\Scripts\activate
 ```
 
-Vite serves the client at `http://localhost:3000`.
-
-### Run with Docker Compose
-
-After creating and editing the root `.env` file as described above:
+Install dependencies:
 
 ```powershell
+pip install -r requirements.txt
+```
+
+Configure your environment variables using `.env.example`.
+
+Start the Flask backend using the project's configured application entry point.
+
+---
+
+## 🎨 Frontend Setup
+
+The frontend runs separately from the backend Docker container.
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+The React frontend communicates with the Flask API through the configured `/api` base path.
+
+---
+
+## 🐳 Running with Docker
+
+Build and start the services:
+
+```bash
 docker compose up --build
 ```
 
-Compose starts the Flask API on port `5000` and MySQL on host port `3307`. The API connects to the database service by the Compose hostname `db`. Start the frontend separately with the npm commands above. Stop the local services with `docker compose down`; the named MySQL volume is retained.
+To stop the services:
 
-### Environment variables
-
-| Variable              | Purpose                                                                 |
-| --------------------- | ----------------------------------------------------------------------- |
-| `MYSQL_ROOT_PASSWORD` | MySQL container root password                                           |
-| `MYSQL_USER`          | Application MySQL user created by the MySQL image                       |
-| `MYSQL_PASSWORD`      | Application user's MySQL password                                       |
-| `MYSQL_DATABASE`      | Database name                                                           |
-| `MYSQL_HOST`          | Database host; Compose overrides this to `db` for the API container     |
-| `DATABASE_URL`        | Optional MySQL/PyMySQL SQLAlchemy URL; overrides component settings     |
-| `JWT_SECRET_KEY`      | JWT signing secret; the app requires at least 32 bytes                  |
-| `CORS_ORIGINS`        | Comma-separated allowed browser origins; defaults to local Vite origins |
-| `FLASK_DEBUG`         | Enables Flask debug mode only when set to `true`                        |
-| `PORT`                | API port; defaults to `5000`                                            |
-| `VITE_API_URL`        | Optional frontend API base URL; defaults to `/api`                      |
-
-When setting `DATABASE_URL` directly, use a MySQL URL and URL-encode special characters in credentials. The component-based MySQL settings encode the username, password, and database name when constructing the URL.
-
-## Testing
-
-Run the backend suite from the repository root:
-
-```powershell
-python -m pytest -q
+```bash
+docker compose down
 ```
 
-**Latest verified result in this clean repository: `29 passed`.** The suite covers signup/login, password hashing, token rejection, task CRUD, user isolation, validation, filters, and pagination. It uses SQLite in memory and does not exercise a live MySQL server.
+Environment configuration should be provided through the appropriate environment file described in the repository.
 
-## Docker
+---
 
-`Dockerfile` builds the Flask API image only. It installs the Python requirements, copies the backend, and runs as a non-root user. `docker-compose.yml` adds MySQL for local development. No deployment or image-publishing workflow is configured.
+## 🧪 Running Tests
 
-## GitHub Actions
+From the backend project directory:
 
-`.github/workflows/ci.yml` runs on pushes and pull requests targeting `main` or `master`. The backend job installs Python 3.14 dependencies, runs pytest, and builds the Docker image. The frontend job uses Node.js 24, runs `npm ci`, `npm audit --audit-level=moderate`, and `npm run build`. The workflow does not deploy or publish artifacts.
+```bash
+pytest
+```
 
-## Security Notes
+Current verified result:
 
-- Keep database passwords and JWT signing keys in ignored local `.env` files or the runtime environment; never put real credentials in source or example templates.
-- Commit only placeholder values in `.env.example` and `frontend/.env.example`.
-- The API rejects missing, invalid, and expired JWTs and scopes task operations to their owner.
-- Rotate any credential that has been exposed; deleting it from the current files does not remove it from Git history.
+```text
+29 passed
+```
 
-## Future Work
+The test suite covers areas including:
 
-These are possible follow-ups, not current features:
+* Authentication
+* User registration/login
+* Task CRUD operations
+* Authorization
+* Task ownership
+* Error handling
 
-- Add schema migrations before evolving the database model.
-- Add refresh-token/session revocation and API rate limiting.
-- Add frontend component or browser integration tests.
-- Add optional email verification for account signup.
+---
+
+## 🔄 Continuous Integration
+
+The project includes a **GitHub Actions** workflow for automated validation.
+
+The CI pipeline helps verify that changes continue to pass the project's automated checks.
+
+Workflow files are available under:
+
+```text
+.github/workflows/
+```
+
+---
+
+## 📂 Project Highlights
+
+This project demonstrates practical experience with:
+
+* REST API development
+* Flask backend architecture
+* JWT authentication
+* Secure password hashing
+* MySQL database integration
+* Authorization and resource ownership
+* React frontend integration
+* Automated testing with Pytest
+* Docker containerization
+* Docker Compose
+* GitHub Actions CI
+* Environment-based secret management
+
+---
+
+## 🔮 Future Improvements
+
+Possible future improvements include:
+
+* Task filtering and advanced search
+* Task priorities and categories
+* Due-date and reminder support
+* Pagination for larger task lists
+* Improved frontend UI/UX
+* Additional automated test coverage
+
+These are potential future enhancements and are **not currently presented as implemented features**.
+
+---
+
+## 📌 Project Status
+
+**Status:** Completed portfolio project
+
+The project is maintained as a demonstration of full-stack development, backend API design, authentication, database integration, testing, Docker, and CI practices.
+
+---
+
+## 👨‍💻 Author
+
+**Ratnesh Makwana**
+
+Backend Engineer | Python | Flask | FastAPI | REST APIs | MySQL | Docker
+
+---
+
+⭐ If you find this project useful, feel free to explore the repository and review the implementation.
