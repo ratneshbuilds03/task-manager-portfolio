@@ -1,0 +1,80 @@
+:root {
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  color: #193a35;
+  background: #edf2ee;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --ink: #193a35;
+  --muted: #61736e;
+  --canvas: #edf2ee;
+  --surface: #ffffff;
+  --line: #d9e3dd;
+  --accent: #c35438;
+  --accent-hover: #a7442c;
+  --soft: #dcebe5;
+  --danger: #b53d3d;
+  --focus: rgba(41, 117, 97, 0.22);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: var(--ink);
+  background: var(--canvas);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: 0;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  font: inherit;
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+input,
+textarea,
+select {
+  color: var(--ink);
+  font: inherit;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #297561;
+  box-shadow: 0 0 0 3px var(--focus);
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #297561;
+  outline-offset: 2px;
+}
